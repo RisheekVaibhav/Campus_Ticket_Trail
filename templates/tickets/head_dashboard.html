@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block content %}
+<h3>Head of Administration Dashboard</h3>
+
+<div class="row mb-3">
+  <div class="col"><div class="card card-stat text-center p-2"><div class="fs-4 fw-bold">{{ total_open }}</div><div class="text-muted small">Total Open</div></div></div>
+  {% for p, count in counts_priority.items %}
+  <div class="col"><div class="card text-center p-2" style="border-left:4px solid #333"><div class="fs-4 fw-bold">{{ count }}</div><div class="text-muted small">{{ p }} Open</div></div></div>
+  {% endfor %}
+</div>
+
+<div class="row mb-4">
+  {% for s, count in counts_status.items %}
+  <div class="col"><div class="card text-center p-2"><div class="fs-5 fw-bold">{{ count }}</div><div class="text-muted small">{{ s }}</div></div></div>
+  {% endfor %}
+</div>
+
+<div class="row">
+  <div class="col-md-7">
+    <h5>Overdue / Critical (P0) Tickets</h5>
+    <table class="table bg-white shadow-sm">
+      <thead><tr><th>Ticket ID</th><th>Subject</th><th>Dept</th><th>Assigned</th><th>Status</th></tr></thead>
+      <tbody>
+      {% for t in overdue %}
+        <tr onclick="window.location='{% url 'ticket_detail' t.pk %}'" style="cursor:pointer" class="table-danger">
+          <td>{{ t.ticket_number }}</td><td>{{ t.subject }}</td><td>{{ t.get_department_display }}</td>
+          <td>{{ t.assigned_to|default:"Unassigned" }}</td><td>{{ t.get_status_display }}</td>
+        </tr>
+      {% empty %}<tr><td colspan="5" class="text-center text-muted">None right now.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="col-md-5">
+    <h5>Staff Workload</h5>
+    <table class="table bg-white shadow-sm">
+      <thead><tr><th>Staff</th><th>Department</th><th>Open Tickets</th></tr></thead>
+      <tbody>
+      {% for s in staff_workload %}
+        <tr><td>{{ s.get_full_name|default:s.username }}</td><td>{{ s.get_department_display }}</td><td>{{ s.open_count }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

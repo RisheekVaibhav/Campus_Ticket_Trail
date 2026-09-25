@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block content %}
+<h3>Notifications</h3>
+<div class="list-group">
+{% for n in notes %}
+  <a href="{% url 'ticket_detail' n.ticket.pk %}" class="list-group-item list-group-item-action">
+    <div class="d-flex justify-content-between">
+      <strong>{{ n.ticket.ticket_number }}</strong>
+      <small class="text-muted">{{ n.created_at|date:"d M, H:i" }}</small>
+    </div>
+    <div>{{ n.message }}</div>
+  </a>
+{% empty %}
+  <div class="text-muted">No notifications yet.</div>
+{% endfor %}
+</div>
+{% endblock %}

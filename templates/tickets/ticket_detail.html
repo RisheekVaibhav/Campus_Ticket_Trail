@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-3">
+  <div>
+    <h3>{{ ticket.ticket_number }} <span class="badge badge-{{ ticket.priority }}">{{ ticket.priority }}</span> <span class="badge status-{{ ticket.status }}">{{ ticket.get_status_display }}</span></h3>
+    <div class="text-muted">{{ ticket.subject }}</div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-7">
+    <div class="card shadow-sm mb-3">
+      <div class="card-body">
+        <h6>Details</h6>
+        <table class="table table-sm">
+          <tr><th style="width:200px">Student</th><td>{{ ticket.student.get_full_name|default:ticket.student.username }} ({{ ticket.student.student_id|default:"-" }})</td></tr>
+          <tr><th>Category</th><td>{{ ticket.get_category_display }}</td></tr>
+          <tr><th>Department</th><td>{{ ticket.get_department_display }}</td></tr>
+          <tr><th>Assigned to</th><td>{{ ticket.assigned_to|default:"Unassigned" }}</td></tr>
+          <tr><th>Priority reason</th><td>{{ ticket.priority_reason }}{% if ticket.manual_priority_override %} <span class="badge bg-dark">Manually overridden</span>{% endif %}</td></tr>
+          <tr><th>What needs to be done</th><td>{{ ticket.what_needs_to_be_done }}</td></tr>
+          <tr><th>Problem description</th><td>{{ ticket.problem_description }}</td></tr>
+          {% if ticket.submission_details %}<tr><th>Submission details</th><td>{{ ticket.submission_details }}</td></tr>{% endif %}
+          {% if ticket.student_stated_deadline %}<tr><th>Student-stated deadline</th><td>{{ ticket.student_stated_deadline }}</td></tr>{% endif %}
+          {% if ticket.additional_info %}<tr><th>Additional info</th><td style="white-space:pre-line">{{ ticket.additional_info }}</td></tr>{% endif %}
+          {% if ticket.more_info_request and ticket.status == 'more_info' %}<tr><th>Info requested</th><td class="text-warning-emphasis">{{ ticket.more_info_request }}</td></tr>{% endif %}
+          {% if ticket.resolution_details %}<tr><th>Resolution</th><td class="text-success">{{ ticket.resolution_details }}</td></tr>{% endif %}
+          {% if ticket.decline_reason %}<tr><th>Decline reason</th><td class="text-danger">{{ ticket.decline_reason }}</td></tr>{% endif %}
+        </table>
+      </div>
+    </div>
+
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h6>Activity Timeline</h6>
+        {% for a in activities %}
+          <div class="timeline-item">
+            <div class="small text-muted">{{ a.created_at|date:"d M, H:i" }} — {{ a.actor|default:"System" }}</div>
+            <div><strong>{{ a.action }}</strong></div>
+            {% if a.detail %}<div class="small">{{ a.detail }}</div>{% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-5">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h6>Actions</h6>
+
+        {% if user.is_student and ticket.status == 'more_info' %}
+          <a href="{% url 'respond_more_info' ticket.pk %}" class="btn btn-warning w-100 mb-2">Respond with Requested Info</a>
+        {% endif %}
+
+        {% if user.is_staff_member and not ticket.assigned_to and ticket.department == user.department %}
+          <form method="post" action="{% url 'claim_ticket' ticket.pk %}">{% csrf_token %}
+            <button class="btn btn-primary w-100 mb-2">Claim This Ticket</button>
+          </form>
+        {% endif %}
+
+        {% if ticket.is_open and can_process %}
+          <a href="{% url 'request_more_info' ticket.pk %}" class="btn btn-outline-warning w-100 mb-2">Request More Information</a>
+          <a href="{% url 'resolve_ticket' ticket.pk %}" class="btn btn-success w-100 mb-2">Resolve</a>
+          <a href="{% url 'decline_ticket' ticket.pk %}" class="btn btn-danger w-100 mb-2">Decline</a>
+          <form method="post" action="{% url 'add_note' ticket.pk %}" class="mb-2">{% csrf_token %}
+            <textarea name="note" class="form-control mb-1" rows="2" placeholder="Add internal note" required></textarea>
+            <button class="btn btn-outline-secondary btn-sm w-100">Add Note</button>
+          </form>
+        {% endif %}
+
+        {% if user.is_head %}
+          <hr>
+          <a href="{% url 'reassign_ticket' ticket.pk %}" class="btn btn-outline-dark w-100 mb-2">Reassign</a>
+          <a href="{% url 'override_priority' ticket.pk %}" class="btn btn-outline-dark w-100 mb-2">Override Priority</a>
+        {% endif %}
+
+        {% if not ticket.is_open %}
+          <div class="text-muted small">This ticket is closed. No further actions available.</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

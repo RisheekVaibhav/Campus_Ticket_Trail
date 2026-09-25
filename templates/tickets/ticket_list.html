@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block content %}
+<h3>All Tickets</h3>
+<form class="row g-2 mb-3">
+  <div class="col-auto">
+    <select name="status" class="form-select form-select-sm">
+      <option value="">All Statuses</option>
+      {% for code, label in status_choices %}<option value="{{ code }}" {% if request.GET.status == code %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="col-auto">
+    <select name="priority" class="form-select form-select-sm">
+      <option value="">All Priorities</option>
+      {% for code, label in priority_choices %}<option value="{{ code }}" {% if request.GET.priority == code %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="col-auto">
+    <select name="category" class="form-select form-select-sm">
+      <option value="">All Categories</option>
+      {% for code, label in category_choices %}<option value="{{ code }}" {% if request.GET.category == code %}selected{% endif %}>{{ label }}</option>{% endfor %}
+    </select>
+  </div>
+  <div class="col-auto"><input type="text" name="q" class="form-control form-control-sm" placeholder="Search ID, subject, student" value="{{ request.GET.q }}"></div>
+  <div class="col-auto"><button class="btn btn-sm btn-primary">Filter</button></div>
+</form>
+
+<table class="table bg-white shadow-sm">
+  <thead><tr><th>Ticket ID</th><th>Subject</th><th>Category</th><th>Priority</th><th>Status</th><th>Department</th><th>Updated</th></tr></thead>
+  <tbody>
+  {% for t in tickets %}
+    <tr onclick="window.location='{% url 'ticket_detail' t.pk %}'" style="cursor:pointer">
+      <td>{{ t.ticket_number }}</td><td>{{ t.subject }}</td><td>{{ t.get_category_display }}</td>
+      <td><span class="badge badge-{{ t.priority }}">{{ t.priority }}</span></td>
+      <td><span class="badge status-{{ t.status }}">{{ t.get_status_display }}</span></td>
+      <td>{{ t.get_department_display }}</td><td>{{ t.updated_at|date:"d M, H:i" }}</td>
+    </tr>
+  {% empty %}<tr><td colspan="7" class="text-center text-muted">No tickets match.</td></tr>{% endfor %}
+  </tbody>
+</table>
+{% endblock %}
